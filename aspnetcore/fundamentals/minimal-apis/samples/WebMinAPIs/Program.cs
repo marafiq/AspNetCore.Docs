@@ -1,5 +1,5 @@
 #define Default // Default CREATE P1 PM PE I1 I0 IP CERT CERT2 CERT3 RE CONFIG LOG #i REB 
-// CONFIGB LOGB IWHB DEP R1 LE LF IM SM NR NR2 RP WILD CON OV EPB OP1 OP2 OP3 OP4
+// CONFIGB LOGB IWHB DEP R1 LE LF IM SM NR NR2 RP WILD PBG PBP EPB OP1 OP2 OP3 OP4
 // CB BA CJSON MULTI STREAM XTN AUTH1 AUTH2 AUTH3 AUTH4 CORS CORS2 SWAG SWAG2 
 // FIL2 IHB CHNGR ADDMID
 #if NEVER
@@ -27,14 +27,14 @@ app.Run();
 #endregion
 #elif CHNGR
 #region snippet_chngr
-var builder = WebApplication.CreateBuilder(args);
-
-// Look for static files in webroot.
-builder.WebHost.UseWebRoot("webroot");
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    // Look for static files in webroot
+    WebRootPath = "webroot"
+});
 
 var app = builder.Build();
-
-app.MapGet("/", () => "Hello World!");
 
 app.Run();
 #endregion
@@ -386,20 +386,6 @@ app.MapGet("/", (LinkGenerator linker) =>
 app.Run();
 #endregion
 
-#elif NR2
-#region snippet_nr2
-var builder = WebApplication.CreateBuilder(args);
-var app = builder.Build();
-
-string Hi() => "Hello there";
-app.MapGet("/hello", Hi);
-
-app.MapGet("/", (LinkGenerator linker) => 
-        $"The link to the hello route is {linker.GetPathByName("Hi", values: null)}");
-
-app.Run();
-#endregion
-
 #elif RP
 #region snippet_rp
 var builder = WebApplication.CreateBuilder(args);
@@ -420,8 +406,8 @@ app.MapGet("/posts/{*rest}", (string rest) => $"Routing to {rest}");
 
 app.Run();
 #endregion
-#elif CON
-#region snippet_con
+#elif PBG
+#region snippet_pbg
 var builder = WebApplication.CreateBuilder(args);
 
 // Added as service
@@ -429,23 +415,21 @@ builder.Services.AddSingleton<Service>();
 
 var app = builder.Build();
 
-app.MapGet("/{id}", (int id, int page, Service service) => { });
+app.MapGet("/{id}", (int id,
+                     int page,
+                     [FromHeader(Name = "X-CUSTOM-HEADER")] string customHeader,
+                     Service service) => { });
 
 class Service { }
 #endregion
 
-#elif OV
-#region snippet_ov
+#elif PBP
+#region snippet_pbp
 var builder = WebApplication.CreateBuilder(args);
-
-// Added as service
-builder.Services.AddSingleton<Service>();
 
 var app = builder.Build();
 
-app.MapPost("/", (Person person, Service service) => { });
-
-class Service { }
+app.MapPost("/", (Person person) => { });
 
 record Person(string Name, int Age);
 #endregion
@@ -503,7 +487,7 @@ app.Run();
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
-app.MapPost("/products", (Product? product) => () => { });
+app.MapPost("/products", (Product? product) => { });
 
 app.Run();
 
@@ -703,10 +687,10 @@ var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
 #region snippet_auth4
-app.MapGet("/login", [AllowAnonymous] () => "This endpoint is for admins only.");
+app.MapGet("/login", [AllowAnonymous] () => "This endpoint is for all roles.");
 
 
-app.MapGet("/login2", () => "This endpoint also for admins only.")
+app.MapGet("/login2", () => "This endpoint also for all roles.")
    .AllowAnonymous();
 #endregion
 

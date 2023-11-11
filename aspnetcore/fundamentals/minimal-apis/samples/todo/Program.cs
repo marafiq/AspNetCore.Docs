@@ -17,17 +17,17 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet("/", () => "Hello World!");
 
-#region snippet_grp
+// <snippet_grp>
 app.MapGet("/todoitems", async (TodoDb db) =>
     await db.Todos.ToListAsync())
     .WithTags("TodoGroup");
-#endregion
+// </snippet_grp>
 
-#region snippet_name
+// <snippet_name>
 app.MapGet("/todoitems2", async (TodoDb db) =>
     await db.Todos.ToListAsync())
     .WithName("GetToDoItems");
-#endregion
+// </snippet_name>
 
 app.MapGet("/todoitems/complete", async (TodoDb db) =>
     await db.Todos.Where(t => t.IsComplete).ToListAsync());
@@ -38,15 +38,15 @@ app.MapGet("/todoitems/{id}", async (int id, TodoDb db) =>
             ? Results.Ok(todo)
             : Results.NotFound());
 
-#region snippet_getCustom
+// <snippet_getCustom>
 app.MapGet("/api/todoitems/{id}", async (int id, TodoDb db) =>
          await db.Todos.FindAsync(id) 
          is Todo todo
          ? Results.Ok(todo) 
          : Results.NotFound())
-   .Produces<Todo>(200)
-   .Produces(404);
-#endregion
+   .Produces<Todo>(StatusCodes.Status200OK)
+   .Produces(StatusCodes.Status404NotFound);
+// </snippet_getCustom>
 
 app.MapGet("/api/todoitems", async (TodoDb db) =>
     await db.Todos.ToListAsync())
@@ -80,7 +80,7 @@ app.MapDelete("/todoitems/{id}", async (int id, TodoDb db) =>
     {
         db.Todos.Remove(todo);
         await db.SaveChangesAsync();
-        return Results.Ok(todo);
+        return Results.NoContent();
     }
 
     return Results.NotFound();

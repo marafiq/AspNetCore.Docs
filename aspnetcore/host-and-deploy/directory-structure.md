@@ -6,12 +6,11 @@ monikerRange: '>= aspnetcore-2.2'
 ms.author: riande
 ms.custom: mvc
 ms.date: 04/09/2020
-no-loc: [Home, Privacy, Kestrel, appsettings.json, "ASP.NET Core Identity", cookie, Cookie, Blazor, "Blazor Server", "Blazor WebAssembly", "Identity", "Let's Encrypt", Razor, SignalR]
 uid: host-and-deploy/directory-structure
 ---
 # ASP.NET Core directory structure
 
-::: moniker range=">= aspnetcore-6.0"
+:::moniker range=">= aspnetcore-6.0"
 
 The *publish* directory contains the app's deployable assets produced by the [dotnet publish](/dotnet/core/tools/dotnet-publish) command. The directory contains:
 
@@ -39,9 +38,9 @@ The *wwwroot* directory, if present, only contains static assets.
 * [Target frameworks](/dotnet/standard/frameworks)
 * [.NET Core RID Catalog](/dotnet/core/rid-catalog)
 
-::: moniker-end
+:::moniker-end
 
-::: moniker range=">= aspnetcore-3.0 < aspnetcore-6.0"
+:::moniker range=">= aspnetcore-3.0 < aspnetcore-6.0"
 
 The *publish* directory contains the app's deployable assets produced by the [dotnet publish](/dotnet/core/tools/dotnet-publish) command. The directory contains:
 
@@ -69,9 +68,9 @@ The *wwwroot* directory, if present, only contains static assets.
 * [Target frameworks](/dotnet/standard/frameworks)
 * [.NET Core RID Catalog](/dotnet/core/rid-catalog)
 
-::: moniker-end
+:::moniker-end
 
-::: moniker range="< aspnetcore-3.0"
+:::moniker range="< aspnetcore-3.0"
 
 The *publish* directory contains the app's deployable assets produced by the [dotnet publish](/dotnet/core/tools/dotnet-publish) command. The directory contains:
 
@@ -122,4 +121,4 @@ The deployment directory requires Read/Execute permissions. The *Logs* directory
 * [Target frameworks](/dotnet/standard/frameworks)
 * [.NET Core RID Catalog](/dotnet/core/rid-catalog)
 
-::: moniker-end
+:::moniker-end

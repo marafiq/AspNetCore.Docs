@@ -1,4 +1,4 @@
-#define DB // DEFAULT RR RH DB DF DF2 UFS UFS2 TREE FECTP NS
+#define MULT2 // DEFAULT RR RH DB DF DF2 UFS UFS2 TREE FECTP NS MUL MULT2
 #if NEVER
 #elif DEFAULT
 #region snippet
@@ -230,6 +230,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddDirectoryBrowser();
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
@@ -362,4 +364,76 @@ app.MapRazorPages();
 
 app.Run();
 #endregion
+#elif MUL
+using Microsoft.Extensions.FileProviders;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddRazorPages();
+builder.Services.AddControllersWithViews();
+
+var app = builder.Build();
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Error");
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+
+#region snippet_mul
+app.UseStaticFiles(); // Serve files from wwwroot
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(builder.Environment.ContentRootPath, "MyStaticFiles"))
+});
+#endregion
+
+app.UseAuthorization();
+
+app.MapDefaultControllerRoute();
+app.MapRazorPages();
+
+app.Run();
+#elif MULT2
+using Microsoft.Extensions.FileProviders;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddRazorPages();
+builder.Services.AddControllersWithViews();
+
+var app = builder.Build();
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Error");
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+
+#region snippet_mult2
+var webRootProvider = new PhysicalFileProvider(builder.Environment.WebRootPath);
+var newPathProvider = new PhysicalFileProvider(
+  Path.Combine(builder.Environment.ContentRootPath, "MyStaticFiles"));
+
+var compositeProvider = new CompositeFileProvider(webRootProvider,
+                                                  newPathProvider);
+
+// Update the default provider.
+app.Environment.WebRootFileProvider = compositeProvider;
+
+app.UseStaticFiles();
+
+#endregion
+
+app.UseAuthorization();
+
+app.MapDefaultControllerRoute();
+app.MapRazorPages();
+
+app.Run();
 #endif

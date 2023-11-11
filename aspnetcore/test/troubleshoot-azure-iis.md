@@ -6,14 +6,13 @@ monikerRange: '>= aspnetcore-2.1'
 ms.author: riande
 ms.custom: mvc
 ms.date: 02/07/2020
-no-loc: [Home, Privacy, Kestrel, appsettings.json, "ASP.NET Core Identity", cookie, Cookie, Blazor, "Blazor Server", "Blazor WebAssembly", "Identity", "Let's Encrypt", Razor, SignalR]
 uid: test/troubleshoot-azure-iis
 ---
 # Troubleshoot ASP.NET Core on Azure App Service and IIS
 
 By [Justin Kotalik](https://github.com/jkotalik)
 
-::: moniker range=">= aspnetcore-3.0"
+:::moniker range=">= aspnetcore-3.0"
 
 This article provides information on common app startup errors and instructions on how to diagnose errors when an app is deployed to Azure App Service or IIS:
 
@@ -34,7 +33,7 @@ Lists additional troubleshooting topics.
 
 ## App startup errors
 
-In Visual Studio, an ASP.NET Core project defaults to [IIS Express](/iis/extensions/introduction-to-iis-express/iis-express-overview) hosting during debugging. A *502.5 - Process Failure* or a *500.30 - Start Failure* that occurs when debugging locally can be diagnosed using the advice in this topic.
+In Visual Studio, the ASP.NET Core project default server is Kestrel. Visual studio can be configured to use [IIS Express](/iis/extensions/introduction-to-iis-express/iis-express-overview). A *502.5 - Process Failure* or a *500.30 - Start Failure* that occurs when debugging locally with IIS Express can be diagnosed using the advice in this topic.
 
 ### 403.14 Forbidden
 
@@ -198,6 +197,23 @@ Confirm that the app pool's 32-bit setting is correct:
 
 Confirm that there isn't a conflict between a `<Platform>` MSBuild property in the project file and the published bitness of the app.
 
+### Failed to start application (ErrorCode '0x800701b1')
+
+```
+EventID: 1010
+Source: IIS AspNetCore Module V2
+Failed to start application '/LM/W3SVC/3/ROOT', ErrorCode '0x800701b1'.
+```
+
+The app failed to start because a Windows Service failed to load.
+
+One common service that needs to be enabled is the "null" service.
+The following command enables the `null` Windows Service:
+
+```cmd
+sc.exe start null
+```
+
 ### Connection reset
 
 If an error occurs after the headers are sent, it's too late for the server to send a **500 Internal Server Error** when an error occurs. This often happens when an error occurs during the serialization of complex objects for a response. This type of error appears as a *connection reset* error on the client. [Application logging](xref:fundamentals/logging/index) can help troubleshoot these types of errors.
@@ -209,6 +225,25 @@ The [ASP.NET Core Module](xref:host-and-deploy/aspnet-core-module) is configured
 ## Troubleshoot on Azure App Service
 
 [!INCLUDE [Azure App Service Preview Notice](~/includes/azure-apps-preview-notice.md)]
+
+### Azure App Services Log stream
+
+The Azure App Services Log streams logging information as it occurs. To view streaming logs:
+
+1. In the Azure portal, open the app in **App Services**.
+1. In the left pane, navigate to **Monitoring** > **App Service Logs**.
+  ![App Service Logs](https://user-images.githubusercontent.com/3605364/183573538-80645002-d1c3-4451-9a2f-91ef4de4e248.png)
+1. Select **File System** for **Web Server Logging**. Optionally enable **Application logging**.
+  ![enable logging](https://user-images.githubusercontent.com/3605364/183529287-f63d3e1c-ee5b-4ca1-bcb6-a8c29d8b26f5.png)
+1. In the left pane, navigate to **Monitoring** > **Log stream**, and then select **Application logs** or **Web Server Logs**.
+
+  ![Monitoring Log stream](https://user-images.githubusercontent.com/3605364/183561255-91f3d5e1-141b-413b-a403-91e74a770545.png)
+
+  The following images shows the application logs output:
+
+  ![app logs](https://user-images.githubusercontent.com/3605364/183528795-532665c0-ce87-4ed3-8e4d-4b374d469c2a.png)
+
+Streaming logs have some latency and might not display immediately.
 
 ### Application Event Log (Azure App Service)
 
@@ -225,7 +260,7 @@ An alternative to using the **Diagnose and solve problems** blade is to examine 
 1. Open **Advanced Tools** in the **Development Tools** area. Select the **Go&rarr;** button. The Kudu console opens in a new browser tab or window.
 1. Using the navigation bar at the top of the page, open **Debug console** and select **CMD**.
 1. Open the **LogFiles** folder.
-1. Select the pencil icon next to the *eventlog.xml* file.
+1. Select the pencil icon next to the `eventlog.xml` file.
 1. Examine the log. Scroll to the bottom of the log to see the most recent events.
 
 ### Run the app in the Kudu console
@@ -549,6 +584,7 @@ A functioning app may fail immediately after upgrading either the .NET Core SDK 
 
 ## Additional resources
 
+* <xref:test/debug-aspnetcore-source>
 * <xref:test/troubleshoot>
 * <xref:host-and-deploy/azure-iis-errors-reference>
 * <xref:fundamentals/error-handling>
@@ -576,9 +612,9 @@ A functioning app may fail immediately after upgrading either the .NET Core SDK 
 
 * [Debugging with Visual Studio Code](https://code.visualstudio.com/docs/editor/debugging)
 
-::: moniker-end
+:::moniker-end
 
-::: moniker range="= aspnetcore-2.2"
+:::moniker range="= aspnetcore-2.2"
 
 This article provides information on common app startup errors and instructions on how to diagnose errors when an app is deployed to Azure App Service or IIS:
 
@@ -708,7 +744,7 @@ An alternative to using the **Diagnose and solve problems** blade is to examine 
 1. Open **Advanced Tools** in the **Development Tools** area. Select the **Go&rarr;** button. The Kudu console opens in a new browser tab or window.
 1. Using the navigation bar at the top of the page, open **Debug console** and select **CMD**.
 1. Open the **LogFiles** folder.
-1. Select the pencil icon next to the *eventlog.xml* file.
+1. Select the pencil icon next to the `eventlog.xml` file.
 1. Examine the log. Scroll to the bottom of the log to see the most recent events.
 
 ### Run the app in the Kudu console
@@ -834,7 +870,7 @@ For more information, see <xref:host-and-deploy/iis/logging-and-diagnostics#enha
 When an app responds slowly or hangs on a request, see the following articles:
 
 * [Troubleshoot slow web app performance issues in Azure App Service](/azure/app-service/app-service-web-troubleshoot-performance-degradation)
-* [Use Crash Diagnoser Site Extension to Capture Dump for Intermittent Exception issues or performance issues on Azure Web App](https://blogs.msdn.microsoft.com/asiatech/2015/12/28/use-crash-diagnoser-site-extension-to-capture-dump-for-intermittent-exception-issues-or-performance-issues-on-azure-web-app/)
+* [Use Crash Diagnoser Site Extension to Capture Dump for Intermittent Exception issues or performance issues on Azure Web App](/azure/app-service/troubleshoot-performance-degradation)
 
 ### Monitoring blades
 
@@ -1070,9 +1106,9 @@ A functioning app may fail immediately after upgrading either the .NET Core SDK 
 
 * [Debugging with Visual Studio Code](https://code.visualstudio.com/docs/editor/debugging)
 
-::: moniker-end
+:::moniker-end
 
-::: moniker range="< aspnetcore-2.2"
+:::moniker range="< aspnetcore-2.2"
 
 This article provides information on common app startup errors and instructions on how to diagnose errors when an app is deployed to Azure App Service or IIS:
 
@@ -1187,7 +1223,7 @@ An alternative to using the **Diagnose and solve problems** blade is to examine 
 1. Open **Advanced Tools** in the **Development Tools** area. Select the **Go&rarr;** button. The Kudu console opens in a new browser tab or window.
 1. Using the navigation bar at the top of the page, open **Debug console** and select **CMD**.
 1. Open the **LogFiles** folder.
-1. Select the pencil icon next to the *eventlog.xml* file.
+1. Select the pencil icon next to the `eventlog.xml` file.
 1. Examine the log. Scroll to the bottom of the log to see the most recent events.
 
 ### Run the app in the Kudu console
@@ -1284,7 +1320,7 @@ For more information, see <xref:host-and-deploy/aspnet-core-module#log-creation-
 When an app responds slowly or hangs on a request, see the following articles:
 
 * [Troubleshoot slow web app performance issues in Azure App Service](/azure/app-service/app-service-web-troubleshoot-performance-degradation)
-* [Use Crash Diagnoser Site Extension to Capture Dump for Intermittent Exception issues or performance issues on Azure Web App](https://blogs.msdn.microsoft.com/asiatech/2015/12/28/use-crash-diagnoser-site-extension-to-capture-dump-for-intermittent-exception-issues-or-performance-issues-on-azure-web-app/)
+* [Use Crash Diagnoser Site Extension to Capture Dump for Intermittent Exception issues or performance issues on Azure Web App](/azure/app-service/troubleshoot-performance-degradation/)
 
 ### Monitoring blades
 
@@ -1502,4 +1538,4 @@ A functioning app may fail immediately after upgrading either the .NET Core SDK 
 
 * [Debugging with Visual Studio Code](https://code.visualstudio.com/docs/editor/debugging)
 
-::: moniker-end
+:::moniker-end

@@ -1,7 +1,8 @@
----
-no-loc: [Home, Privacy, Kestrel, appsettings.json, "ASP.NET Core Identity", cookie, Cookie, Blazor, "Blazor Server", "Blazor WebAssembly", "Identity", "Let's Encrypt", Razor, SignalR]
----
-## Troubleshoot
+### Logging
+
+*This section applies to ASP.NET Core 7.0 or later.*
+
+To enable debug or trace logging for Blazor WebAssembly authentication, see <xref:blazor/fundamentals/logging>.
 
 ### Common errors
 
@@ -27,23 +28,23 @@ no-loc: [Home, Privacy, Kestrel, appsettings.json, "ASP.NET Core Identity", cook
 
   * Decode the contents of a JSON Web Token (JWT) used for authenticating a client or accessing a server web API, depending on where the problem is occurring. For more information, see [Inspect the content of a JSON Web Token (JWT)](#inspect-the-content-of-a-json-web-token-jwt).
   
-  The documenation team responds to document feedback and bugs in articles (open an issue from the **This page** feedback section) but is unable to provide product support. Several public support forums are available to assist with troubleshooting an app. We recommend the following:
+  The documentation team responds to document feedback and bugs in articles (open an issue from the **This page** feedback section) but is unable to provide product support. Several public support forums are available to assist with troubleshooting an app. We recommend the following:
   
   * [Stack Overflow (tag: `blazor`)](https://stackoverflow.com/questions/tagged/blazor)
-  * [ASP.NET Core Slack Team](http://tattoocoder.com/aspnet-slack-sign-up/)
+  * [ASP.NET Core Slack Team](https://join.slack.com/t/aspnetcore/shared_invite/zt-1mv5487zb-EOZxJ1iqb0A0ajowEbxByQ)
   * [Blazor Gitter](https://gitter.im/aspnet/Blazor)
   
   *The preceding forums are not owned or controlled by Microsoft.*
   
   For non-security, non-sensitive, and non-confidential reproducible framework bug reports, [open an issue with the ASP.NET Core product unit](https://github.com/dotnet/aspnetcore/issues). Don't open an issue with the product unit until you've thoroughly investigated the cause of a problem and can't resolve it on your own and with the help of the community on a public support forum. The product unit isn't able to troubleshoot individual apps that are broken due to simple misconfiguration or use cases involving third-party services. If a report is sensitive or confidential in nature or describes a potential security flaw in the product that attackers may exploit, see [Reporting security issues and bugs (dotnet/aspnetcore GitHub repository)](https://github.com/dotnet/aspnetcore/blob/main/CONTRIBUTING.md#reporting-security-issues-and-bugs).
 
-* Unauthorized client for AAD
+* Unauthorized client for ME-ID
 
   > info: Microsoft.AspNetCore.Authorization.DefaultAuthorizationService[2]
   > Authorization failed. These requirements were not met:
   > DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
 
-  Login callback error from AAD:
+  Login callback error from ME-ID:
 
   * Error: `unauthorized_client`
   * Description: `AADB2C90058: The provided application is not configured to allow public clients.`
@@ -94,13 +95,101 @@ A functioning app may fail immediately after upgrading either the .NET Core SDK 
 > [!NOTE]
 > Use of package versions incompatible with the app's target framework isn't supported. For information on a package, use the [NuGet Gallery](https://www.nuget.org) or [FuGet Package Explorer](https://www.fuget.org).
 
-### Run the Server app
+:::moniker range="< aspnetcore-8.0"
 
-When testing and troubleshooting a hosted Blazor solution, make sure that you're running the app from the **`Server`** project. For example in Visual Studio, confirm that the Server project is highlighted in **Solution Explorer** before you start the app with any of the following approaches:
+### Run the `Server` app
 
-* Select the **Run** button.
-* Use **Debug** > **Start Debugging** from the menu.
-* Press <kbd>F5</kbd>.
+When testing and troubleshooting a hosted Blazor WebAssembly [solution](xref:blazor/tooling#visual-studio-solution-file-sln), make sure that you're running the app from the **`Server`** project.
+
+:::moniker-end
+
+### Inspect the user
+
+The following `User` component can be used directly in apps or serve as the basis for further customization:
+
+```razor
+@page "/User"
+@attribute [Authorize]
+@using System.Text.Json
+@using System.Security.Claims
+@inject IAccessTokenProvider AuthorizationService
+
+<h1>@AuthenticatedUser?.Identity?.Name</h1>
+
+<h2>Claims</h2>
+
+@foreach (var claim in AuthenticatedUser?.Claims ?? Array.Empty<Claim>())
+{
+    <p class="claim">@(claim.Type): @claim.Value</p>
+}
+
+<h2>Access token</h2>
+
+<p id="access-token">@AccessToken?.Value</p>
+
+<h2>Access token claims</h2>
+
+@foreach (var claim in GetAccessTokenClaims())
+{
+    <p>@(claim.Key): @claim.Value.ToString()</p>
+}
+
+@if (AccessToken != null)
+{
+    <h2>Access token expires</h2>
+
+    <p>Current time: <span id="current-time">@DateTimeOffset.Now</span></p>
+    <p id="access-token-expires">@AccessToken.Expires</p>
+
+    <h2>Access token granted scopes (as reported by the API)</h2>
+
+    @foreach (var scope in AccessToken.GrantedScopes)
+    {
+        <p>Scope: @scope</p>
+    }
+}
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; }
+
+    public ClaimsPrincipal AuthenticatedUser { get; set; }
+    public AccessToken AccessToken { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        var state = await AuthenticationState;
+        var accessTokenResult = await AuthorizationService.RequestAccessToken();
+
+        if (!accessTokenResult.TryGetToken(out var token))
+        {
+            throw new InvalidOperationException(
+                "Failed to provision the access token.");
+        }
+
+        AccessToken = token;
+
+        AuthenticatedUser = state.User;
+    }
+
+    protected IDictionary<string, object> GetAccessTokenClaims()
+    {
+        if (AccessToken == null)
+        {
+            return new Dictionary<string, object>();
+        }
+
+        // header.payload.signature
+        var payload = AccessToken.Value.Split(".")[1];
+        var base64Payload = payload.Replace('-', '+').Replace('_', '/')
+            .PadRight(payload.Length + (4 - payload.Length % 4) % 4, '=');
+
+        return JsonSerializer.Deserialize<IDictionary<string, object>>(
+            Convert.FromBase64String(base64Payload));
+    }
+}
+```
 
 ### Inspect the content of a JSON Web Token (JWT)
 
